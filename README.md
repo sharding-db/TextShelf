@@ -1,38 +1,53 @@
 # TextShelf
 
-macOS 菜单栏文本剪贴板，首版只做最近 15 条记录。
+<img src="Resources/AppIcon.png" alt="TextShelf icon" width="96" height="96">
 
-- 右上角常驻图标，无 Dock 图标。
-- 自动记录文本，最多保留 15 条不同内容，最新的在最上面。
-- 点击图标查看列表，鼠标移到记录上可以预览完整文本。
-- 点击记录后，原样写入系统剪贴板并关闭面板，再按 `⌘V` 粘贴。
-- 从历史中重新复制不增加记录、不改变顺序；其他应用重复复制同一内容时移到最上面。
-- 点击面板外或按 `Esc` 关闭，面板底部可以退出应用。
+A small macOS menu bar app that keeps your 15 most recent text clips. Preview a clip, click to copy it, then paste wherever you need it.
 
-历史只保存在内存，退出后清空；无联网、无账号、无图片和文件记录。
-文本中的换行、空格、Unicode 均原样保留。不会记录带 `org.nspasteboard.ConcealedType` 标记的内容。
+## Screenshot
 
-## 构建与运行
+<img src="docs/images/textshelf.png" alt="TextShelf menu bar panel showing recent text clips" width="480">
 
-需要 macOS 13+ 和 Swift 6 工具链（Xcode Command Line Tools 即可），无第三方依赖。
+The current app interface is in Chinese. Unrelated menu bar icons have been removed from this screenshot.
+
+## Features
+
+- Lives in the menu bar, with no Dock icon.
+- Automatically keeps up to 15 distinct text clips, newest first.
+- Hover over a clip to preview its full text.
+- Click a clip to copy its original text and close the panel, then press `⌘V` to paste.
+- Copying from history preserves the list order. Copying an existing clip in another app moves it to the top.
+- Click outside the panel or press `Esc` to dismiss it. Use the button at the bottom to quit.
+
+History stays in memory and is cleared when you quit. No account or network connection is needed. Images and files are not recorded. Line breaks, whitespace, and Unicode are preserved. Clipboard content marked with `org.nspasteboard.ConcealedType` is ignored.
+
+## Build and run
+
+Requires macOS 13 or later and a Swift 6 toolchain. Xcode Command Line Tools is sufficient; there are no third-party dependencies.
 
 ```sh
+git clone https://github.com/sharding-db/TextShelf.git
+cd TextShelf
 ./scripts/build.sh
 open dist/TextShelf.app
 ```
 
-也可以直接双击 `dist/TextShelf.app`。需要时可自行将它移动到「应用程序」。
+You can also double-click `dist/TextShelf.app`, or drag it into your Applications folder.
 
-## 验证
+The build script generates the app icon, packages the app, and applies an ad hoc signature for local use. It keeps the previous app bundle under `.build/` so an existing instance can continue running.
+
+## Checks
 
 ```sh
 ./scripts/check.sh
 ```
 
-测试使用独立的临时 NSPasteboard，不读取或覆盖用户的系统剪贴板。
-覆盖容量淘汰、文本保真、重复内容、重新复制、复制竞争窗口以及文本／图片／文件识别。
-同时检查空列表和 15 条记录时的原生视图布局、代码覆盖率及应用签名。
-只有 Command Line Tools 的机器也可以运行，无需安装 XCTest 或第三方测试框架。
+The checks use isolated temporary pasteboards, leaving your system clipboard untouched. They cover history capacity, exact text preservation, deduplication, restoring clips, copies arriving between timer ticks, and image, file, and concealed-content filtering.
 
-macOS 未提供常规剪贴板变更通知，应用每 250ms 检查一次 changeCount；
-短于该采样间隔的连续复制可能只记录最后一条。
+The script also checks the native view layout with an empty history and 15 clips, reports code coverage, and verifies the app signature. It runs with Command Line Tools alone, without XCTest or a third-party test framework.
+
+## Notes
+
+- Clipboard changes are checked every 250 ms. Multiple copies within one polling interval may only capture the last value.
+- History is not saved across app restarts.
+- The app copies selected text to the clipboard; paste it into the destination app with `⌘V`.
